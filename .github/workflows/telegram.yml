@@ -24,7 +24,7 @@ jobs:
           echo "${{ secrets.SESSION_B64 }}" | base64 -d > my_session.session
 
       - name: Run script
-        run: python script.py
+        run: python tele_main.py
         env:
           API_ID: ${{ secrets.API_ID }}
           API_HASH: ${{ secrets.API_HASH }}
