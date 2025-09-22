@@ -1,0 +1,30 @@
+name: Telegram Telethon Script
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install telethon
+
+      - name: Restore session file
+        run: |
+          echo "${{ secrets.SESSION_B64 }}" | base64 -d > my_session.session
+
+      - name: Run script
+        run: python script.py
+        env:
+          API_ID: ${{ secrets.API_ID }}
+          API_HASH: ${{ secrets.API_HASH }}
