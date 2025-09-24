@@ -1,33 +1,63 @@
 name: Telegram Telethon Script
-
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 */1 * * *'  # 6시간마다 실행 (선택사항)
 
 jobs:
   run:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-
+        uses: actions/checkout@v4  # v3 → v4로 업데이트
+        
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-
+          
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
+          
       - name: Restore session file
         run: |
           echo "${{ secrets.SESSION_B64 }}" | base64 -d > my_session.session
-
+          
       - name: Run script
         run: python tele_main.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           API_ID: ${{ secrets.API_ID }}
           API_HASH: ${{ secrets.API_HASH }}
+          
+      - name: Backup session file
+        run: |
+          base64 my_session.session > session_backup.txt
+          echo "Session file backed up"
+          
+      - name: Upload results as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: telegram-messages
+          path: |
+            telegram_semiconductor_messages.csv
+          retention-days: 30
+          
+      - name: Commit and push results (optional)
+        run: |
+          git config --local user.email "lyh9003@google.com"
+          git config --local user.name "LeeYongHoon"
+          git add telegram_semiconductor_messages.csv
+          git diff --staged --quiet || git commit -m "Update telegram messages data"
+          git push
+        continue-on-error: true
