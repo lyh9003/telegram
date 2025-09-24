@@ -412,14 +412,14 @@ if __name__ == "__main__":
     existing_data = load_existing_data(csv_filename)
     
     # 새 메시지 크롤링
-    new_messages = crawl_telegram_messages(limit_per_channel=20)  # 테스트용으로 20개로 제한
+    new_messages = crawl_telegram_messages(limit_per_channel=50)  # 고정값 50개로 설정
     
     # 크롤링 결과 확인
     if not new_messages.empty:
         log_debug(f"새 메시지 수집 성공: {len(new_messages)}개")
         
-        # GPT 분석 여부 선택 (True: GPT 분석 실행, False: 분석 건너뛰기)
-        USE_GPT_ANALYSIS = False  # 비용을 고려해 기본값은 False
+        # GPT 분석 실행 (항상 활성화)
+        USE_GPT_ANALYSIS = True  # 무조건 GPT 분석 실행
         
         # GPT 분석 (선택적)
         processed_messages = process_with_gpt(new_messages, USE_GPT_ANALYSIS)
