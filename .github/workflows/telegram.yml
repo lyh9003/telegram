@@ -28,5 +28,6 @@ jobs:
       - name: Run script
         run: python tele_main.py
         env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           API_ID: ${{ secrets.API_ID }}
           API_HASH: ${{ secrets.API_HASH }}
