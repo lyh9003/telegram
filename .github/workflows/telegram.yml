@@ -41,7 +41,7 @@ jobs:
 
       - name: Commit and push results (optional)
         run: |
-          git config --local user.email "lyh9003@google.com"
+          git config --local user.email "lyh9003@gmail.com"
           git config --local user.name "LeeYongHoon"
           git add telegram_semiconductor_messages.csv
           git diff --staged --quiet || git commit -m "Update telegram messages data"
