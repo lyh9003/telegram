@@ -303,7 +303,7 @@ def crawl_telegram_messages(limit_per_channel=50):
                             normalized = normalize_text(raw_text)
                             
                             # 길이 필터
-                            if len(normalized) < 20:
+                            if len(normalized) < 50:
                                 continue
                             
                             # 중복 확인
@@ -407,7 +407,7 @@ if __name__ == "__main__":
     existing_data = load_existing_data(csv_filename)
     
     # 새 메시지 크롤링
-    new_messages = crawl_telegram_messages(limit_per_channel=10)  # 고정값 10개로 설정
+    new_messages = crawl_telegram_messages(limit_per_channel=5)  # 고정값 5개로 설정
     
     # 크롤링 결과 확인
     if not new_messages.empty:
