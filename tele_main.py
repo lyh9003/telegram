@@ -407,7 +407,7 @@ if __name__ == "__main__":
     existing_data = load_existing_data(csv_filename)
     
     # 새 메시지 크롤링
-    new_messages = crawl_telegram_messages(limit_per_channel=50)  # 고정값 50개로 설정
+    new_messages = crawl_telegram_messages(limit_per_channel=10)  # 고정값 10개로 설정
     
     # 크롤링 결과 확인
     if not new_messages.empty:
