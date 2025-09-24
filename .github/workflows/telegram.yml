@@ -16,19 +16,29 @@ on:
   schedule:
     - cron: '0 */6 * * *'  # 6시간마다 실행
 
+# GitHub Actions에 쓰기 권한 부여
+permissions:
+  contents: write
+  actions: read
+  pages: write
+  id-token: write
+
 jobs:
   run:
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout
-        uses: actions/checkout@v4  # v2에서 v4로 업데이트
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # 명시적 토큰 사용
+          fetch-depth: 0  # 전체 히스토리 가져오기
         
       - name: Set up Python
-        uses: actions/setup-python@v5  # v4에서 v5로 업데이트
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'  # 3.10에서 3.11로 업데이트
-          cache: 'pip'  # pip 캐시 추가로 빌드 시간 단축
+          python-version: '3.11'
+          cache: 'pip'
           
       - name: Install dependencies
         run: |
@@ -167,8 +177,12 @@ jobs:
       - name: Commit and push results
         if: success()
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          # Git 설정
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          # 현재 브랜치 확인
+          echo "현재 브랜치: $(git branch --show-current)"
           
           # 파일 크기 확인
           if [ -f "telegram_semiconductor_messages.csv" ]; then
@@ -177,25 +191,48 @@ jobs:
             
             echo "CSV 파일 정보: ${file_size} bytes, ${line_count} lines"
             
-            # 파일이 너무 크면 경고
+            # 파일이 너무 크면 경고 (GitHub는 100MB 제한)
             if [ $file_size -gt 25000000 ]; then  # 25MB
-              echo "⚠️ 파일이 너무 큽니다 (${file_size} bytes). GitHub 제한을 고려해 주세요."
+              echo "⚠️ 파일이 큽니다 (${file_size} bytes). GitHub 제한(100MB)을 고려해 주세요."
             fi
             
+            # 변경사항이 있는지 확인
             git add telegram_semiconductor_messages.csv
             
-            # 세션 백업이 있으면 추가 (보안상 권장하지 않으므로 주석처리)
-            # if [ -f "session_backup.txt" ]; then
-            #   git add session_backup.txt
-            # fi
-            
             if git diff --staged --quiet; then
-              echo "변경사항이 없습니다."
+              echo "ℹ️ 변경사항이 없습니다. 커밋하지 않습니다."
             else
-              commit_message="Update telegram data: ${line_count} messages ($(date '+%Y-%m-%d %H:%M:%S UTC')) [skip ci]"
+              commit_message="📊 Update telegram data: ${line_count} messages ($(date '+%Y-%m-%d %H:%M:%S UTC')) [skip ci]"
+              
+              echo "커밋 메시지: $commit_message"
               git commit -m "$commit_message"
-              git push origin HEAD:main
-              echo "✅ 변경사항을 커밋하고 푸시했습니다."
+              
+              # 푸시 시도 (재시도 로직 포함)
+              max_retries=3
+              retry_count=0
+              
+              while [ $retry_count -lt $max_retries ]; do
+                echo "푸시 시도 $((retry_count + 1))/$max_retries"
+                
+                if git push origin HEAD:main; then
+                  echo "✅ 변경사항을 성공적으로 푸시했습니다."
+                  break
+                else
+                  retry_count=$((retry_count + 1))
+                  if [ $retry_count -lt $max_retries ]; then
+                    echo "⏳ 푸시 실패. 5초 후 재시도합니다..."
+                    sleep 5
+                    # 최신 변경사항을 가져와서 충돌 해결 시도
+                    git pull --rebase origin main || {
+                      echo "⚠️ 리베이스 실패. 단순 머지를 시도합니다."
+                      git pull origin main --no-rebase
+                    }
+                  else
+                    echo "❌ 푸시에 실패했습니다. 최대 재시도 횟수 초과."
+                    echo "아티팩트를 통해 데이터를 다운로드할 수 있습니다."
+                  fi
+                fi
+              done
             fi
           else
             echo "❌ CSV 파일이 없어서 커밋하지 않습니다."
@@ -205,20 +242,33 @@ jobs:
         if: always()
         run: |
           echo "=== 워크플로우 실행 요약 ==="
-          echo "실행 시간: $(date)"
-          echo "상태: ${{ job.status }}"
+          echo "🕐 실행 시간: $(date)"
+          echo "📊 상태: ${{ job.status }}"
           
           if [ -f "telegram_semiconductor_messages.csv" ]; then
             line_count=$(wc -l < telegram_semiconductor_messages.csv)
             file_size=$(wc -c < telegram_semiconductor_messages.csv)
-            echo "생성된 CSV: ${line_count} lines, ${file_size} bytes"
+            echo "📁 생성된 CSV: ${line_count} lines, ${file_size} bytes"
+            
+            # 데이터 미리보기
+            echo ""
+            echo "📋 데이터 미리보기 (최근 3개 메시지):"
+            if [ $line_count -gt 1 ]; then
+              head -1 telegram_semiconductor_messages.csv
+              echo "---"
+              tail -3 telegram_semiconductor_messages.csv | head -3
+            fi
           else
-            echo "CSV 파일이 생성되지 않았습니다."
+            echo "❌ CSV 파일이 생성되지 않았습니다."
           fi
           
           if [ -f "my_session.session" ]; then
             session_size=$(wc -c < my_session.session)
-            echo "세션 파일: ${session_size} bytes"
+            echo "🔐 세션 파일: ${session_size} bytes"
           else
-            echo "세션 파일이 없습니다."
+            echo "⚠️ 세션 파일이 없습니다."
           fi
+          
+          echo ""
+          echo "💾 아티팩트를 통해 데이터를 다운로드할 수 있습니다."
+          echo "🔄 다음 자동 실행: 6시간 후"
