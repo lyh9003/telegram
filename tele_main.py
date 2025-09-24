@@ -17,10 +17,11 @@ def log_debug(message):
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
     log_debug("OPENAI_API_KEY가 설정되지 않았습니다.")
+    exit(1)
 else:
     log_debug("OPENAI_API_KEY 로드 완료")
 
-client = OpenAI(api_key=api_key) if api_key else None
+client = OpenAI(api_key=api_key)
 
 # ====== 텔레그램 설정 ======
 api_id = os.getenv("API_ID")
@@ -177,9 +178,6 @@ def is_semiconductor_related(text: str, fast_rx) -> bool:
 # ====== GPT 분석 함수들 ======
 def analyze_with_gpt(text: str):
     """GPT를 사용하여 텍스트 분석 (요약 및 키워드 추출)"""
-    if not client:
-        return "GPT 클라이언트 없음", "GPT 클라이언트 없음"
-    
     try:
         prompt = f"""
         다음 텍스트를 분석해서 200자 이내로 요약하고, 핵심 키워드 5개를 추출해주세요.
@@ -193,7 +191,7 @@ def analyze_with_gpt(text: str):
         """
 
         response = client.chat.completions.create(
-            model="gpt-4o-mini",  # 더 안정적인 모델로 변경
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "당신은 반도체 및 기술 분야 텍스트를 분석하는 전문가입니다."},
                 {"role": "user", "content": prompt}
@@ -215,7 +213,7 @@ def analyze_with_gpt(text: str):
             elif line.strip().startswith("키워드:"):
                 keywords = line.replace("키워드:", "").strip()
         
-        return summary, keywords
+        return summary if summary else "요약 실패", keywords if keywords else "키워드 실패"
         
     except Exception as e:
         log_debug(f"GPT 분석 중 오류 발생: {e}")
@@ -223,9 +221,6 @@ def analyze_with_gpt(text: str):
 
 def sentiment_analysis(text: str):
     """GPT를 사용한 감정 분석"""
-    if not client:
-        return "GPT 클라이언트 없음"
-    
     try:
         prompt = f"""
         다음 텍스트의 감정을 분석해주세요. 긍정적, 부정적, 중립적 중 하나로 답변해주세요.
@@ -308,14 +303,14 @@ def crawl_telegram_messages(limit_per_channel=50):
                             normalized = normalize_text(raw_text)
                             
                             # 길이 필터
-                            if len(normalized) < 20:  # 길이 조건을 50에서 20으로 완화
+                            if len(normalized) < 20:
                                 continue
                             
                             # 중복 확인
                             if normalized in unique_texts:
                                 continue
                             
-                            # 반도체 관련 키워드 필터링 (조건 완화)
+                            # 반도체 관련 키워드 필터링
                             if not is_semiconductor_related(normalized, FAST_ANY):
                                 continue
                             
@@ -359,15 +354,15 @@ def crawl_telegram_messages(limit_per_channel=50):
     log_debug(f"총 {len(messages_data)}개의 메시지 수집 완료")
     return pd.DataFrame(messages_data)
 
-def process_with_gpt(df, process_gpt=True):
-    """GPT를 사용하여 메시지 분석 (선택적)"""
-    log_debug(f"GPT 분석 시작 - 처리할 메시지: {len(df)}개, GPT 사용: {process_gpt}")
+def process_with_gpt(df):
+    """GPT를 사용하여 메시지 분석 (무조건 실행)"""
+    log_debug(f"GPT 분석 시작 - 처리할 메시지: {len(df)}개")
     
-    if not process_gpt or df.empty or not client:
-        df['summary'] = '분석 안함'
-        df['keywords'] = '분석 안함'
-        df['sentiment'] = '분석 안함'
-        log_debug("GPT 분석을 건너뜁니다.")
+    if df.empty:
+        df['summary'] = '데이터 없음'
+        df['keywords'] = '데이터 없음'
+        df['sentiment'] = '데이터 없음'
+        log_debug("빈 데이터프레임 - GPT 분석을 건너뜁니다.")
         return df
     
     summaries = []
@@ -419,10 +414,7 @@ if __name__ == "__main__":
         log_debug(f"새 메시지 수집 성공: {len(new_messages)}개")
         
         # GPT 분석 실행 (항상 활성화)
-        USE_GPT_ANALYSIS = True  # 무조건 GPT 분석 실행
-        
-        # GPT 분석 (선택적)
-        processed_messages = process_with_gpt(new_messages, USE_GPT_ANALYSIS)
+        processed_messages = process_with_gpt(new_messages)
         
         # 기존 데이터와 병합
         updated_data = merge_and_remove_duplicates(existing_data, processed_messages)
