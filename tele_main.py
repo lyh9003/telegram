@@ -252,7 +252,7 @@ def sentiment_analysis(text: str):
         return "분석 실패"
 
 # ====== 메인 크롤링 함수 ======
-def crawl_telegram_messages(limit_per_channel=50):
+def crawl_telegram_messages(limit_per_channel=5):
     """텔레그램 메시지 크롤링"""
     
     log_debug("텔레그램 메시지 크롤링 시작...")
