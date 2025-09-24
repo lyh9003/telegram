@@ -179,65 +179,141 @@ def is_semiconductor_related(text: str, fast_rx) -> bool:
 def analyze_with_gpt(text: str):
     """GPT를 사용하여 텍스트 분석 (요약 및 키워드 추출)"""
     try:
-        prompt = f"""
-        다음 텍스트를 분석해서 200자 이내로 요약하고, 핵심 키워드 5개를 추출해주세요.
-        요약 내용은 1. 2. 3. 4. 5. 식으로 논리적으로 이해가도록 순서대로 적어주세요.
-        ~했음, ~함, ~였음 식으로 간결체로 적어주세요.
+        prompt = f"""다음 텍스트를 분석해서 요약과 키워드를 추출해주세요.
 
-        텍스트:
-        {text}
+요약 조건:
+- 200자 이내로 작성
+- 1. 2. 3. 4. 5. 식으로 논리적 순서로 작성
+- ~했음, ~함, ~였음 식으로 간결체 사용
 
-        응답 형식:
-        요약: 요약 내용
-        키워드: 키워드1, 키워드2, 키워드3, 키워드4, 키워드5
-        """
+키워드 조건:
+- 핵심 키워드 5개 추출
+- 쉼표로 구분
+
+텍스트: {text}
+
+아래 형식으로만 답변해주세요:
+요약: [여기에 요약 내용]
+키워드: [키워드1, 키워드2, 키워드3, 키워드4, 키워드5]"""
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "당신은 반도체 및 기술 분야 텍스트를 분석하는 전문가입니다."},
+                {"role": "system", "content": "당신은 반도체 및 기술 분야 텍스트를 분석하는 전문가입니다. 정확히 요청된 형식으로만 답변하세요."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=500,
-            temperature=0.3
+            max_tokens=600,
+            temperature=0.2
         )
         
         result = response.choices[0].message.content.strip()
+        log_debug(f"GPT 원본 응답: {result}")
         
-        # 요약과 키워드 분리
-        lines = result.split('\n')
+        # 더 유연한 파싱 로직
         summary = ""
         keywords = ""
         
+        # 각 줄을 확인하며 파싱
+        lines = result.split('\n')
         for line in lines:
-            if line.strip().startswith("요약:"):
-                summary = line.replace("요약:", "").strip()
-            elif line.strip().startswith("키워드:"):
-                keywords = line.replace("키워드:", "").strip()
+            line_clean = line.strip()
+            
+            # 요약 찾기 (다양한 형태 대응)
+            if any(starter in line_clean.lower() for starter in ['요약:', '요약 :', '요약-', '요약 -']):
+                # '요약:' 이후 내용 추출
+                for separator in ['요약:', '요약 :', '요약-', '요약 -']:
+                    if separator in line_clean:
+                        summary = line_clean.split(separator, 1)[1].strip()
+                        break
+                
+                # 여러 줄에 걸친 요약 처리
+                if not summary and line_clean.endswith(':'):
+                    # 다음 줄들을 요약으로 수집
+                    line_idx = lines.index(line)
+                    for next_line in lines[line_idx + 1:]:
+                        next_clean = next_line.strip()
+                        if next_clean and not any(kw in next_clean.lower() for kw in ['키워드:', '키워드 :']):
+                            if summary:
+                                summary += " " + next_clean
+                            else:
+                                summary = next_clean
+                        elif any(kw in next_clean.lower() for kw in ['키워드:', '키워드 :']):
+                            break
+            
+            # 키워드 찾기 (다양한 형태 대응)
+            if any(starter in line_clean.lower() for starter in ['키워드:', '키워드 :', '키워드-', '키워드 -']):
+                # '키워드:' 이후 내용 추출
+                for separator in ['키워드:', '키워드 :', '키워드-', '키워드 -']:
+                    if separator in line_clean:
+                        keywords = line_clean.split(separator, 1)[1].strip()
+                        break
+                
+                # 여러 줄에 걸친 키워드 처리
+                if not keywords and line_clean.endswith(':'):
+                    # 다음 줄들을 키워드로 수집
+                    line_idx = lines.index(line)
+                    for next_line in lines[line_idx + 1:]:
+                        next_clean = next_line.strip()
+                        if next_clean and not any(summ in next_clean.lower() for summ in ['요약:', '요약 :']):
+                            if keywords:
+                                keywords += " " + next_clean
+                            else:
+                                keywords = next_clean
+                        elif any(summ in next_clean.lower() for summ in ['요약:', '요약 :']):
+                            break
         
-        return summary if summary else "요약 실패", keywords if keywords else "키워드 실패"
+        # 결과가 비어있을 경우 전체 텍스트에서 다시 시도
+        if not summary or not keywords:
+            log_debug("표준 파싱 실패, 전체 텍스트 재분석 시도")
+            
+            # 요약 부분 찾기
+            if not summary:
+                summary_match = re.search(r'요약[:\s\-]*(.+?)(?=키워드|$)', result, re.DOTALL | re.IGNORECASE)
+                if summary_match:
+                    summary = summary_match.group(1).strip()
+            
+            # 키워드 부분 찾기
+            if not keywords:
+                keyword_match = re.search(r'키워드[:\s\-]*(.+)', result, re.DOTALL | re.IGNORECASE)
+                if keyword_match:
+                    keywords = keyword_match.group(1).strip()
+        
+        # 최종 정리
+        summary = summary.strip() if summary else "요약 파싱 실패"
+        keywords = keywords.strip() if keywords else "키워드 파싱 실패"
+        
+        # 200자 초과시 자르기
+        if len(summary) > 200:
+            summary = summary[:197] + "..."
+        
+        log_debug(f"파싱된 요약: {summary}")
+        log_debug(f"파싱된 키워드: {keywords}")
+        
+        return summary, keywords
         
     except Exception as e:
         log_debug(f"GPT 분석 중 오류 발생: {e}")
         return "분석 실패", "분석 실패"
 
+
 def sentiment_analysis(text: str):
     """GPT를 사용한 감정 분석"""
     try:
-        prompt = f"""
-        다음 텍스트의 감정을 분석해주세요. 긍정적, 부정적, 중립적 중 하나로 답변해주세요.
-        즉 딱 세글자로만 답변하면 됩니다.
+        prompt = f"""다음 텍스트의 투자/시장 감정을 분석해주세요.
 
-        텍스트:
-        {text}
+텍스트: {text}
 
-        답변: (긍정적/부정적/중립적)
-        """
+다음 중 하나로만 답변해주세요:
+- 긍정적: 주가 상승, 호재, 성장 등 긍정적 내용
+- 부정적: 주가 하락, 악재, 위험 등 부정적 내용  
+- 중립적: 단순 정보 전달, 객관적 사실
+
+답변: """
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "당신은 텍스트의 감정을 분석하는 전문가입니다."},
+                {"role": "system", "content": "당신은 금융/투자 텍스트의 감정을 분석하는 전문가입니다. 정확히 긍정적, 부정적, 중립적 중 하나로만 답변하세요."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=50,
@@ -245,7 +321,17 @@ def sentiment_analysis(text: str):
         )
         
         sentiment = response.choices[0].message.content.strip()
-        return sentiment
+        
+        # 감정 분류 정규화
+        sentiment_lower = sentiment.lower()
+        if any(word in sentiment_lower for word in ['긍정', 'positive', '호재', '상승']):
+            return "긍정적"
+        elif any(word in sentiment_lower for word in ['부정', 'negative', '악재', '하락']):
+            return "부정적"
+        elif any(word in sentiment_lower for word in ['중립', 'neutral', '객관']):
+            return "중립적"
+        else:
+            return sentiment  # 원본 반환
         
     except Exception as e:
         log_debug(f"감정 분석 중 오류 발생: {e}")
