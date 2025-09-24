@@ -38,14 +38,7 @@ jobs:
           base64 my_session.session > session_backup.txt
           echo "Session file backed up"
           
-      - name: Upload results as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: telegram-messages
-          path: |
-            telegram_semiconductor_messages.csv
-          retention-days: 30
-          
+
       - name: Commit and push results (optional)
         run: |
           git config --local user.email "lyh9003@google.com"
