@@ -188,8 +188,8 @@ def analyze_with_gpt(text: str):
         {text}
 
         응답 형식:
-        요약: [요약 내용]
-        키워드: [키워드1, 키워드2, 키워드3, 키워드4, 키워드5]
+        요약: 요약 내용
+        키워드: 키워드1, 키워드2, 키워드3, 키워드4, 키워드5
         """
 
         response = client.chat.completions.create(
@@ -226,6 +226,7 @@ def sentiment_analysis(text: str):
     try:
         prompt = f"""
         다음 텍스트의 감정을 분석해주세요. 긍정적, 부정적, 중립적 중 하나로 답변해주세요.
+        즉 딱 세글자로만 답변하면 됩니다.
 
         텍스트:
         {text}
