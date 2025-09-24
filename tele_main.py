@@ -11,7 +11,7 @@ from telethon.sync import TelegramClient
 from openai import OpenAI
 
 # ====== OpenAI 설정 ======
-api_key = os.getenv("OPENAI_API_KEY")
+api_key = os.getenv(OPENAI_API_KEY)
 client = OpenAI(api_key=api_key)
 
 # ====== 텔레그램 설정 ======
