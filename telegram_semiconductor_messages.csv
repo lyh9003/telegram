@@ -1,4 +1,54 @@
 ﻿channel,sender_id,date_utc,date_local,labels,message,normalized_text,message_length,summary,keywords,sentiment
+cahier_de_market,1001883361144,2025-10-13T13:59:33+00:00,2025-10-13 13:59:33,Company;Product;Tech,"*** OpenAI 딜 정리**
+
+**10GW from 엔비디아
+6GW from AMD
+10GW from 브로드컴(ASIC, 자체 칩)**
+
+- **지금까지 총 26GW**
+- 그런데 오늘 발표된 브로드컴 10GW는 지난 9월 브로드컴 실적발표 때 이미 오픈된 내용(""신규고객으로부터 $10B 수주"")","*** OpenAI 딜 정리** **10GW from 엔비디아 6GW from AMD 10GW from 브로드컴(ASIC, 자체 칩)** - **지금까지 총 26GW** - 그런데 오늘 발표된 브로드컴 10GW는 지난 9월 브로드컴 실적발표 때 이미 오픈된 내용(""신규고객으로부터 $10B 수주"")",168,1. OpenAI 딜에서 엔비디아가 10GW를 제공했음. 2. AMD는 6GW를 제공했음. 3. 브로드컴은 10GW를 제공했음. 4. 총 26GW가 확보되었음. 5. 브로드컴의 10GW는 이미 지난 9월 발표된 내용임.,"OpenAI, 엔비디아, AMD, 브로드컴, 26GW",중립적
+KISemicon,1001281344016,2025-10-13T13:53:38+00:00,2025-10-13 13:53:38,Company;Tech,"*** 브로드컴 프리마켓 급등**
+
+>> 또 오픈AI
+
+========================
+
+• 오픈AI & 브로드컴, 2026년 맞춤형 데이터센터 칩을 출시 계획
+
+• 브로드컴 가속기 및 이더넷 솔루션 포함한 수직/수평 시스템 공동 개발 예정
+
+• 브로드컴은 AI 가속기와 네트워크 시스템랙 구축 예정. 2026년 하반기 시작 & 2029년 말까지 완료
+
+博通盘前涨12%，消息面上，OpenAI与博通计划于2026年推出定制数据中心芯片。OpenAI和Broadcom将共同开发系统，其中包括Broadcom的加速器和以太网解决方案，用于纵向扩展和横向扩展。博通将部署人工智能加速器和网络系统机架，计划于2026年下半年开始，并于2029年底完成。
+
+~ OpenAI and Broadcom said Monday that they’re **jointly building and deploying 10 gigawatts of custom artificial intelligence accelerators **as part of a broader effort across the industry to scale AI infrastructure
+
+https://www.cnbc.com/2025/10/13/openai-partners-with-broadcom-custom-ai-chips-alongside-nvidia-amd.html?__source=iosappshare%7Ccom.apple.UIKit.activity.CopyToPasteboard","*** 브로드컴 프리마켓 급등** >> 또 오픈AI ======================== • 오픈AI & 브로드컴, 2026년 맞춤형 데이터센터 칩을 출시 계획 • 브로드컴 가속기 및 이더넷 솔루션 포함한 수직/수평 시스템 공동 개발 예정 • 브로드컴은 AI 가속기와 네트워크 시스템랙 구축 예정. 2026년 하반기 시작 & 2029년 말까지 완료 博通盘前涨12%，消息面上，OpenAI与博通计划于2026年推出定制数据中心芯片。OpenAI和Broadcom将共同开发系统，其中包括Broadcom的加速器和以太网解决方案，用于纵向扩展和横向扩展。博通将部署人工智能加速器和网络系统机架，计划于2026年下半年开始，并于2029年底完成。 ~ OpenAI and Broadcom said Monday that they’re **jointly building and deploying 10 gigawatts of custom artificial intelligence accelerators **as part of a broader effort across the industry to scale AI infrastructure https://www.cnbc.com/2025/10/13/openai-partners-with-broadcom-custom-ai-chips-alongside-nvidia-amd.html?__source=iosappshare%7Ccom.apple.UIKit.activity.CopyToPasteboard",740,1. 오픈AI와 브로드컴이 2026년 맞춤형 데이터센터 칩 출시 계획을 발표했음. 2. 두 회사는 브로드컴의 가속기와 이더넷 솔루션을 포함한 시스템을 공동 개발함. 3. 브로드컴은 AI 가속기와 네트워크 시스템랙을 구축할 예정임. 4. 프로젝트는 2026년 하반기 시작하고 2029년 말까지 완료할 계획임. 5. 이는 AI 인프라 확장을 위한 산업 전반...,"오픈AI, 브로드컴, 데이터센터, AI 가속기, 맞춤형 칩",긍정적
+bornlupin,1001513828114,2025-10-13T13:08:07+00:00,2025-10-13 13:08:07,Product;Tech,"**오픈AI(OpenAI)·브로드컴(Broadcom), 수십억 달러 규모 AI 칩 공동 개발 계약 체결**
+
+**4년간 10GW 규모의 맞춤형 AI 칩 및 컴퓨팅 시스템 구축 계획**
+
+**오픈AI(OpenAI)와 브로드컴은 향후 4년 동안 10기가와트(GW) 규모의 맞춤형 인공지능(AI) 칩과 컴퓨팅 시스템을 공동 개발·배치하기로 협력**하고 있다고 밝혔다.
+이번 협력은** 오픈AI의 막대한 연산 수요를 충족시키기 위한 대형 파트너십으로 평가**된다.
+
+오픈AI는 **자체 GPU를 설계할 계획이며, 이를 통해 그동안 강력한 AI 모델을 개발**하며 축적한 지식을 향후 시스템의 기반이 되는 하드웨어에 통합하려 하고 있다.
+
+이번 합의에 따라 **오픈AI와 브로드컴이 공동으로 칩을 개발하며, 브로드컴이 2026년 하반기부터 생산·배포를 담당할 예정**이다.
+
+https://www.wsj.com/tech/ai/openai-broadcom-forge-multibillion-dollar-chip-development-deal-58d930d1","**오픈AI(OpenAI)·브로드컴(Broadcom), 수십억 달러 규모 AI 칩 공동 개발 계약 체결** **4년간 10GW 규모의 맞춤형 AI 칩 및 컴퓨팅 시스템 구축 계획** **오픈AI(OpenAI)와 브로드컴은 향후 4년 동안 10기가와트(GW) 규모의 맞춤형 인공지능(AI) 칩과 컴퓨팅 시스템을 공동 개발·배치하기로 협력**하고 있다고 밝혔다. 이번 협력은** 오픈AI의 막대한 연산 수요를 충족시키기 위한 대형 파트너십으로 평가**된다. 오픈AI는 **자체 GPU를 설계할 계획이며, 이를 통해 그동안 강력한 AI 모델을 개발**하며 축적한 지식을 향후 시스템의 기반이 되는 하드웨어에 통합하려 하고 있다. 이번 합의에 따라 **오픈AI와 브로드컴이 공동으로 칩을 개발하며, 브로드컴이 2026년 하반기부터 생산·배포를 담당할 예정**이다. https://www.wsj.com/tech/ai/openai-broadcom-forge-multibillion-dollar-chip-development-deal-58d930d1",529,1. 오픈AI와 브로드컴이 AI 칩 공동 개발 계약을 체결했음. 2. 4년간 10GW 규모의 맞춤형 AI 칩과 컴퓨팅 시스템 구축 계획임. 3. 오픈AI의 연산 수요를 충족하기 위한 파트너십으로 평가됨. 4. 오픈AI는 자체 GPU 설계를 계획하고 있음. 5. 브로드컴은 2026년 하반기부터 생산·배포를 담당할 예정임.,"오픈AI, 브로드컴, AI 칩, 공동 개발, GPU",긍정적
+bornlupin,1001513828114,2025-10-13T12:21:48+00:00,2025-10-13 12:21:48,Company,"**Mizuho, NVIDIA 목표주가 225달러로 상향 **
+
+**AI 시장 지배력 재확인**
+
+Mizuho는 엔비디아의 목표주가를 205달러에서 225달러로 상향하고, ‘아웃퍼폼(Outperform)’ 등급을 유지했다고 월요일 발표했다. 
+
+이번 목표주가 상향은 **엔비디아가 인공지능(AI) 시장의 확고한 리더로서 위치를 유지할 것이라는 Mizuho의 지속적인 신뢰를 반영**한다.
+
+Mizuho의 애널리스트 비제이 라케시(Vijay Rakesh)는 **“엔비디아는 AI 분야에서 매우 유리한 위치에 있으며, 2028년까지 AI 데이터센터 매출이 3,000억 달러를 초과할 것으로 전망된다”**고 밝혔다.
+
+그는 또한 “**Rubin/Instinct 가격으로 인해 네오클라우드(Neocloud) 예산이 점점 더 압박받고 있으며, 고객들은 ROI(투자수익률)에 더욱 집중하고 있다**”고 언급하면서, 시장 내 경쟁적 가격 압력이 확대되고 있음을 시사했다.
+
+Mizuho는 **Broadcom과 Nvidia가 현재 시장에서 가장 좋은 포지션을 확보한 기업으로 평가**했으며, 동시에 AMD가 OpenAI와 체결한 협력 계약이 향후 주가 상승 여력을 의미한다고 덧붙였다.","**Mizuho, NVIDIA 목표주가 225달러로 상향 ** **AI 시장 지배력 재확인** Mizuho는 엔비디아의 목표주가를 205달러에서 225달러로 상향하고, ‘아웃퍼폼(Outperform)’ 등급을 유지했다고 월요일 발표했다. 이번 목표주가 상향은 **엔비디아가 인공지능(AI) 시장의 확고한 리더로서 위치를 유지할 것이라는 Mizuho의 지속적인 신뢰를 반영**한다. Mizuho의 애널리스트 비제이 라케시(Vijay Rakesh)는 **“엔비디아는 AI 분야에서 매우 유리한 위치에 있으며, 2028년까지 AI 데이터센터 매출이 3,000억 달러를 초과할 것으로 전망된다”**고 밝혔다. 그는 또한 “**Rubin/Instinct 가격으로 인해 네오클라우드(Neocloud) 예산이 점점 더 압박받고 있으며, 고객들은 ROI(투자수익률)에 더욱 집중하고 있다**”고 언급하면서, 시장 내 경쟁적 가격 압력이 확대되고 있음을 시사했다. Mizuho는 **Broadcom과 Nvidia가 현재 시장에서 가장 좋은 포지션을 확보한 기업으로 평가**했으며, 동시에 AMD가 OpenAI와 체결한 협력 계약이 향후 주가 상승 여력을 의미한다고 덧붙였다.",599,"1. Mizuho는 엔비디아 목표주가를 205달러에서 225달러로 상향했음. 2. AI 시장에서 엔비디아의 지배력을 재확인했음. 3. 2028년 AI 데이터센터 매출이 3,000억 달러를 초과할 것으로 전망했음. 4. 경쟁적 가격 압력이 확대되고 있음을 시사했음. 5. Broadcom과 Nvidia가 시장에서 좋은 포지션을 확보했음.","Mizuho, 엔비디아, AI 시장, 목표주가, 가격 압력",긍정적
 cahier_de_market,1001883361144,2025-10-13T11:53:12+00:00,2025-10-13 11:53:12,Memory,"ADATA, DDR4 부활설 일축…2년간 메모리 슈퍼사이클 전망  
 (by https://t.me/TNBfolio)  
 - ADATA 회장 Simon Chen은 DDR4 생산 재개 루머를 부인하며, 주요 제조사들이 관련 생산라인을 이미 철거했다고 밝혔다.  
