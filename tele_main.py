@@ -296,7 +296,7 @@ def analyze_with_gpt(text: str):
 def sentiment_analysis(text: str):
     """GPT를 사용한 감정 분석"""
     try:
-        prompt = f"""다음 텍스트의 투자/시장 감정을 분석해주세요.
+        prompt = f"""다음 텍스트의 반도체 산업 관점에서 투자/시장 감정을 분석해주세요.
 
 텍스트: {text}
 
@@ -310,7 +310,7 @@ def sentiment_analysis(text: str):
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "당신은 금융/투자 텍스트의 감정을 분석하는 전문가입니다. 정확히 긍정적, 부정적, 중립적 중 하나로만 답변하세요."},
+                {"role": "system", "content": "당신은 반도체 투자 텍스트의 감정을 분석하는 전문가입니다. 정확히 긍정적, 부정적, 중립적 중 하나로만 답변하세요."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=100,
