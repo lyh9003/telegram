@@ -461,7 +461,7 @@ def process_with_gpt(df):
         
         # GPT 분석
         summary, keywords = analyze_with_gpt(row['message'])
-        sentiment = sentiment_analysis(row['summary'])
+        sentiment = sentiment_analysis(summary)
         
         summaries.append(summary)
         keywords_list.append(keywords)
