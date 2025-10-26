@@ -283,10 +283,6 @@ def analyze_with_gpt(text: str):
         summary = summary.strip() if summary else "요약 파싱 실패"
         keywords = keywords.strip() if keywords else "키워드 파싱 실패"
         
-        # 200자 초과시 자르기
-        if len(summary) > 200:
-            summary = summary[:197] + "..."
-        
         log_debug(f"파싱된 요약: {summary}")
         log_debug(f"파싱된 키워드: {keywords}")
         
@@ -317,7 +313,7 @@ def sentiment_analysis(text: str):
                 {"role": "system", "content": "당신은 금융/투자 텍스트의 감정을 분석하는 전문가입니다. 정확히 긍정적, 부정적, 중립적 중 하나로만 답변하세요."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=50,
+            max_tokens=100,
             temperature=0.1
         )
         
@@ -465,7 +461,7 @@ def process_with_gpt(df):
         
         # GPT 분석
         summary, keywords = analyze_with_gpt(row['message'])
-        sentiment = sentiment_analysis(row['message'])
+        sentiment = sentiment_analysis(row['summary'])
         
         summaries.append(summary)
         keywords_list.append(keywords)
