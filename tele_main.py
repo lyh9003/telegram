@@ -59,9 +59,8 @@ PRODUCT = [
     r'AI칩', r'반도체', r'semiconductor'
 ]
 TECH = [
-    r'EUV', r'DUV', r'포토|리소그래피|lithography', r'식각|에칭|etch', r'증착|CVD|ALD',
-    r'GAA|FinFET', r'공정|nm\b|나노미터', r'노광', r'수율|yield', r'웨이퍼|wafer', r'칩|die\b',
-    r'3nm', r'5nm', r'7nm', r'14nm'
+    r'EUV', r'DUV', r'포토|리소그래피|lithography', r'식각|에칭|etch', r'증착|CVD',
+    r'GAA|FinFET', r'nm\b|나노미터', r'노광', r'수율|yield', r'웨이퍼|wafer', r'칩|die\b',
 ]
 
 # ====== 파일 관리 함수들 ======
@@ -389,7 +388,7 @@ def crawl_telegram_messages(limit_per_channel=5):
                             normalized = normalize_text(raw_text)
                             
                             # 길이 필터
-                            if len(normalized) < 50:
+                            if len(normalized) < 200:
                                 continue
                             
                             # 중복 확인
