@@ -5,7 +5,9 @@ import time
 import logging
 import pandas as pd
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+
+KST = timezone(timedelta(hours=9))
 from telethon.sync import TelegramClient
 from openai import OpenAI
 
@@ -218,7 +220,7 @@ def crawl_telegram_messages(channel_usernames, api_id, api_hash, limit_per_chann
                                 'channel': username,
                                 'sender_id': str(message.sender_id).replace("-", "") if message.sender_id else "unknown",
                                 'date_utc': message.date.astimezone(timezone.utc).isoformat() if message.date else datetime.now(timezone.utc).isoformat(),
-                                'date_local': message.date.astimezone().strftime('%Y-%m-%d %H:%M:%S') if message.date else datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                'date_local': message.date.astimezone(KST).strftime('%Y-%m-%d %H:%M:%S') if message.date else datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S'),
                                 'labels': ";".join(sorted(set(labels))),
                                 'message': raw_text,
                                 'normalized_text': normalized,
