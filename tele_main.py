@@ -171,7 +171,7 @@ def analyze_with_gpt(text: str, openai_client: OpenAI):
         return "분석 실패", "분석 실패", "분석 실패"
 
 # ====== 메인 크롤링 함수 ======
-def crawl_telegram_messages(channel_usernames, api_id, api_hash, limit_per_channel=5):
+def crawl_telegram_messages(channel_usernames, api_id, api_hash, limit_per_channel=30):
     """텔레그램 메시지 크롤링"""
     logger.info("텔레그램 메시지 크롤링 시작...")
 
@@ -307,7 +307,7 @@ def main():
 
     csv_filename = "telegram_semiconductor_messages.csv"
     existing_data = load_existing_data(csv_filename)
-    new_messages = crawl_telegram_messages(channel_usernames, api_id, api_hash, limit_per_channel=5)
+    new_messages = crawl_telegram_messages(channel_usernames, api_id, api_hash, limit_per_channel=30)
 
     if not new_messages.empty:
         logger.info(f"새 메시지 수집 성공: {len(new_messages)}개")
