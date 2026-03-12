@@ -80,23 +80,38 @@ def load_existing_data(file_name):
         return pd.DataFrame()
 
 def merge_and_remove_duplicates(existing_df, new_df):
-    """기존 데이터와 새 데이터 병합 및 중복 제거"""
+    """기존 데이터와 새 데이터 병합 및 중복 제거 (forward_count 합산)"""
     log_debug(f"데이터 병합 시작 - 기존: {len(existing_df)}개, 새로운: {len(new_df)}개")
-    
+
     if not existing_df.empty and not new_df.empty:
-        # 'normalized_text' 컬럼을 기준으로 중복 제거
         combined_df = pd.concat([existing_df, new_df], ignore_index=True)
-        before_dedup = len(combined_df)
-        combined_df = combined_df.drop_duplicates(subset='normalized_text', keep='first').reset_index(drop=True)
-        after_dedup = len(combined_df)
-        log_debug(f"중복 제거 완료: {before_dedup}개 → {after_dedup}개 (제거: {before_dedup - after_dedup}개)")
     elif not new_df.empty:
         combined_df = new_df
         log_debug(f"새 데이터만 사용합니다. 데이터 개수: {len(combined_df)}")
+        return combined_df
     else:
-        combined_df = existing_df
         log_debug("새 데이터가 없습니다.")
-    return combined_df
+        return existing_df
+
+    before_dedup = len(combined_df)
+
+    # forward_count 합산 및 forward_channels 통합
+    if 'forward_count' in combined_df.columns:
+        combined_df['forward_count'] = combined_df['forward_count'].fillna(1).astype(int)
+        count_sum = combined_df.groupby('normalized_text')['forward_count'].sum()
+        channels_agg = combined_df.groupby('normalized_text')['forward_channels'].apply(
+            lambda x: ';'.join(sorted(set(';'.join(x.dropna().astype(str)).split(';'))))
+        )
+
+    deduped = combined_df.drop_duplicates(subset='normalized_text', keep='first').reset_index(drop=True)
+
+    if 'forward_count' in combined_df.columns:
+        deduped['forward_count'] = deduped['normalized_text'].map(count_sum)
+        deduped['forward_channels'] = deduped['normalized_text'].map(channels_agg)
+
+    after_dedup = len(deduped)
+    log_debug(f"중복 제거 완료: {before_dedup}개 → {after_dedup}개 (제거: {before_dedup - after_dedup}개)")
+    return deduped
 
 def save_updated_data(data, file_name):
     """데이터를 CSV 파일로 저장"""
@@ -108,8 +123,10 @@ def save_updated_data(data, file_name):
             log_debug("빈 데이터프레임을 저장합니다.")
             # 기본 컬럼 구조로 빈 파일 생성
             empty_df = pd.DataFrame(columns=[
-                'channel', 'sender_id', 'date_utc', 'date_local', 'labels', 
-                'message', 'normalized_text', 'message_length', 'summary', 'keywords', 'sentiment'
+                'channel', 'sender_id', 'date_utc', 'date_local', 'labels',
+                'message', 'normalized_text', 'message_length',
+                'forward_count', 'forward_channels',
+                'summary', 'keywords', 'sentiment'
             ])
             empty_df.to_csv(file_name, encoding='utf-8-sig', index=False)
             log_debug(f"빈 CSV 파일이 생성되었습니다: {file_name}")
@@ -130,8 +147,10 @@ def save_updated_data(data, file_name):
         try:
             with open(file_name, 'w', encoding='utf-8-sig', newline='') as f:
                 writer = csv.writer(f)
-                writer.writerow(['channel', 'sender_id', 'date_utc', 'date_local', 'labels', 
-                               'message', 'normalized_text', 'message_length', 'summary', 'keywords', 'sentiment'])
+                writer.writerow(['channel', 'sender_id', 'date_utc', 'date_local', 'labels',
+                               'message', 'normalized_text', 'message_length',
+                               'forward_count', 'forward_channels',
+                               'summary', 'keywords', 'sentiment'])
                 if not data.empty:
                     for _, row in data.iterrows():
                         writer.writerow(row.values)
@@ -357,7 +376,7 @@ def crawl_telegram_messages(limit_per_channel=5):
         return pd.DataFrame()
     
     messages_data = []
-    unique_texts = set()
+    text_meta = {}  # normalized_text → {forward_count, forward_channels}
     
     # 세션 파일 확인
     session_file = 'my_session.session'
@@ -392,22 +411,24 @@ def crawl_telegram_messages(limit_per_channel=5):
                             if len(normalized) < 200:
                                 continue
                             
-                            # 중복 확인
-                            if normalized in unique_texts:
-                                continue
-                            
                             # 반도체 관련 키워드 필터링
                             if not is_semiconductor_related(normalized, FAST_ANY):
                                 continue
-                            
+
+                            # 중복 확인 — 중복이면 카운트만 증가
+                            if normalized in text_meta:
+                                text_meta[normalized]['forward_count'] += 1
+                                text_meta[normalized]['forward_channels'].add(username)
+                                continue
+
                             # 라벨 추출
                             labels = extract_labels(normalized, RX)
                             if not labels:
                                 labels = ["Uncategorized"]
-                            
-                            unique_texts.add(normalized)
+
+                            text_meta[normalized] = {'forward_count': 1, 'forward_channels': {username}}
                             channel_message_count += 1
-                            
+
                             # 메시지 데이터 구성
                             message_data = {
                                 'channel': username,
@@ -417,9 +438,11 @@ def crawl_telegram_messages(limit_per_channel=5):
                                 'labels': ";".join(sorted(set(labels))),
                                 'message': raw_text,
                                 'normalized_text': normalized,
-                                'message_length': len(raw_text)
+                                'message_length': len(raw_text),
+                                'forward_count': 1,
+                                'forward_channels': username
                             }
-                            
+
                             messages_data.append(message_data)
                             
                         except Exception as e:
@@ -437,6 +460,12 @@ def crawl_telegram_messages(limit_per_channel=5):
         log_debug("빈 데이터프레임을 반환합니다.")
         return pd.DataFrame()
     
+    # text_meta의 최종 카운트/채널 반영
+    for msg in messages_data:
+        norm = msg['normalized_text']
+        msg['forward_count'] = text_meta[norm]['forward_count']
+        msg['forward_channels'] = ';'.join(sorted(text_meta[norm]['forward_channels']))
+
     log_debug(f"총 {len(messages_data)}개의 메시지 수집 완료")
     return pd.DataFrame(messages_data)
 
@@ -541,8 +570,10 @@ if __name__ == "__main__":
         log_debug("새로 수집된 메시지가 없습니다.")
         # 그래도 빈 파일이라도 생성
         empty_df = pd.DataFrame(columns=[
-            'channel', 'sender_id', 'date_utc', 'date_local', 'labels', 
-            'message', 'normalized_text', 'message_length', 'summary', 'keywords', 'sentiment'
+            'channel', 'sender_id', 'date_utc', 'date_local', 'labels',
+            'message', 'normalized_text', 'message_length',
+            'forward_count', 'forward_channels',
+            'summary', 'keywords', 'sentiment'
         ])
         save_updated_data(empty_df, csv_filename)
     
