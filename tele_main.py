@@ -71,11 +71,11 @@ def load_existing_data(file_name):
         return pd.DataFrame()
 
 def merge_and_remove_duplicates(existing_df, new_df):
-    """기존 데이터와 새 데이터 병합 및 중복 제거 (forward_count 합산)"""
+    """기존 데이터와 새 데이터 병합 및 중복 제거 (forward_count는 최신값 우선)"""
     logger.info(f"데이터 병합 시작 - 기존: {len(existing_df)}개, 새로운: {len(new_df)}개")
 
     if not existing_df.empty and not new_df.empty:
-        combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+        combined_df = pd.concat([new_df, existing_df], ignore_index=True)  # 새 데이터 먼저 → keep='first'로 최신값 유지
     elif not new_df.empty:
         logger.info(f"새 데이터만 사용합니다. 데이터 개수: {len(new_df)}개")
         return new_df
@@ -84,21 +84,7 @@ def merge_and_remove_duplicates(existing_df, new_df):
         return existing_df
 
     before_dedup = len(combined_df)
-
-    if 'forward_channels' in combined_df.columns:
-        # forward_channels의 고유 채널 집합으로 재계산 — 반복 실행 시 누적 방지
-        channels_agg = combined_df.groupby('normalized_text')['forward_channels'].apply(
-            lambda x: ';'.join(sorted(set(';'.join(x.dropna().astype(str)).split(';'))))
-        )
-
     deduped = combined_df.drop_duplicates(subset='normalized_text', keep='first').reset_index(drop=True)
-
-    if 'forward_channels' in combined_df.columns:
-        deduped['forward_channels'] = deduped['normalized_text'].map(channels_agg)
-        deduped['forward_count'] = deduped['forward_channels'].apply(
-            lambda x: len([ch for ch in x.split(';') if ch]) if pd.notna(x) and x else 1
-        )
-
     after_dedup = len(deduped)
     logger.info(f"중복 제거 완료: {before_dedup}개 → {after_dedup}개 (제거: {before_dedup - after_dedup}개)")
     return deduped
@@ -194,7 +180,6 @@ def crawl_telegram_messages(channel_usernames, api_id, api_hash, limit_per_chann
     FAST_ANY = compile_any(COMPANY + MEMORY + PRODUCT + TECH)
 
     messages_data = []
-    text_meta = {}  # normalized_text → {forward_count, forward_channels}
 
     try:
         with TelegramClient('my_session', api_id, api_hash) as telegram_client:
@@ -222,14 +207,7 @@ def crawl_telegram_messages(channel_usernames, api_id, api_hash, limit_per_chann
                             if not is_semiconductor_related(normalized, FAST_ANY):
                                 continue
 
-                            # 중복 확인 — 중복이면 카운트만 증가
-                            if normalized in text_meta:
-                                text_meta[normalized]['forward_count'] += 1
-                                text_meta[normalized]['forward_channels'].add(username)
-                                continue
-
                             labels = extract_labels(normalized, RX) or ["Uncategorized"]
-                            text_meta[normalized] = {'forward_count': 1, 'forward_channels': {username}}
                             channel_message_count += 1
 
                             messages_data.append({
@@ -241,7 +219,7 @@ def crawl_telegram_messages(channel_usernames, api_id, api_hash, limit_per_chann
                                 'message': raw_text,
                                 'normalized_text': normalized,
                                 'message_length': len(raw_text),
-                                'forward_count': 1,
+                                'forward_count': message.forwards or 0,
                                 'forward_channels': username
                             })
 
@@ -258,12 +236,6 @@ def crawl_telegram_messages(channel_usernames, api_id, api_hash, limit_per_chann
     except Exception as e:
         logger.error(f"텔레그램 클라이언트 연결 실패: {e}")
         return pd.DataFrame()
-
-    # text_meta의 최종 카운트/채널 반영
-    for msg in messages_data:
-        norm = msg['normalized_text']
-        msg['forward_count'] = text_meta[norm]['forward_count']
-        msg['forward_channels'] = ';'.join(sorted(text_meta[norm]['forward_channels']))
 
     logger.info(f"총 {len(messages_data)}개의 메시지 수집 완료")
     return pd.DataFrame(messages_data)
@@ -331,7 +303,7 @@ def main():
 
     csv_filename = "telegram_semiconductor_messages.csv"
     existing_data = load_existing_data(csv_filename)
-    new_messages = crawl_telegram_messages(channel_usernames, api_id, api_hash, limit_per_channel=5)
+    new_messages = crawl_telegram_messages(channel_usernames, api_id, api_hash, limit_per_channel=20)
 
     if not new_messages.empty:
         logger.info(f"새 메시지 수집 성공: {len(new_messages)}개")
