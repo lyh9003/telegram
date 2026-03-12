@@ -307,7 +307,32 @@ def main():
 
     if not new_messages.empty:
         logger.info(f"새 메시지 수집 성공: {len(new_messages)}개")
-        processed_messages = process_with_gpt(new_messages, openai_client)
+
+        # 이미 처리된 메시지는 GPT 스킵
+        if not existing_data.empty and 'normalized_text' in existing_data.columns:
+            existing_texts = set(existing_data['normalized_text'].dropna())
+            truly_new = new_messages[~new_messages['normalized_text'].isin(existing_texts)].reset_index(drop=True)
+            already_exists = new_messages[new_messages['normalized_text'].isin(existing_texts)].reset_index(drop=True)
+            logger.info(f"신규: {len(truly_new)}개, 기존(GPT 스킵): {len(already_exists)}개")
+        else:
+            truly_new = new_messages
+            already_exists = pd.DataFrame()
+
+        processed_new = process_with_gpt(truly_new, openai_client)
+
+        # forward_count 업데이트를 위해 기존 메시지도 병합에 포함
+        if not already_exists.empty:
+            # 기존 데이터에서 summary/keywords/sentiment 가져와 채움
+            existing_cols = existing_data[['normalized_text', 'summary', 'keywords', 'sentiment']].drop_duplicates('normalized_text')
+            already_exists = already_exists.merge(existing_cols, on='normalized_text', how='left', suffixes=('', '_old'))
+            for col in ['summary', 'keywords', 'sentiment']:
+                if f'{col}_old' in already_exists.columns:
+                    already_exists[col] = already_exists[f'{col}_old']
+                    already_exists = already_exists.drop(columns=[f'{col}_old'])
+            processed_messages = pd.concat([processed_new, already_exists], ignore_index=True)
+        else:
+            processed_messages = processed_new
+
         updated_data = merge_and_remove_duplicates(existing_data, processed_messages)
 
         if 'date_utc' in updated_data.columns and not updated_data.empty:
