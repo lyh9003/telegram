@@ -142,7 +142,11 @@ def analyze_with_gpt(text: str, openai_client: OpenAI):
 - 각 항목 사이에 줄바꿈 추가
 - ~했음, ~함, ~였음, ~임, ~있음 식으로 나열식 간결체 사용
 
-감성: 반도체 투자 관점에서 긍정적/부정적/중립적 중 하나
+감성 분류 기준 (반도체 투자 관점):
+- 긍정적: AI/반도체 수요 증가, 설비 투자 확대, 실적 개선, 공급 부족(수요 강세), 메모리 판가 상승, GPU 수요 급증, 데이터센터 투자 확대
+- 부정적: 수요 감소, 재고 증가, 규제 강화, 경쟁 심화, 실적 악화, 메모리 판가 하락, 감산, 수출 제한
+- 중립적: 단순 현황 보고, 인사/조직 변경, 방향 불명확한 내용
+※ 서비스 불안정·과부하 등 간접 신호도 수요 강세면 긍정적으로 분류
 
 텍스트: {text}
 
@@ -219,7 +223,7 @@ def crawl_telegram_messages(channel_usernames, api_id, api_hash, limit_per_chann
                                 'message': raw_text,
                                 'normalized_text': normalized,
                                 'message_length': len(raw_text),
-                                'forward_count': message.forwards or 0,
+                                'forward_count': round((message.forwards / message.views) * 10000) if message.forwards and message.views else 0,
                                 'forward_channels': username
                             })
 
@@ -303,7 +307,7 @@ def main():
 
     csv_filename = "telegram_semiconductor_messages.csv"
     existing_data = load_existing_data(csv_filename)
-    new_messages = crawl_telegram_messages(channel_usernames, api_id, api_hash, limit_per_channel=20)
+    new_messages = crawl_telegram_messages(channel_usernames, api_id, api_hash, limit_per_channel=5)
 
     if not new_messages.empty:
         logger.info(f"새 메시지 수집 성공: {len(new_messages)}개")
