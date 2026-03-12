@@ -85,18 +85,19 @@ def merge_and_remove_duplicates(existing_df, new_df):
 
     before_dedup = len(combined_df)
 
-    if 'forward_count' in combined_df.columns:
-        combined_df['forward_count'] = combined_df['forward_count'].fillna(1).astype(int)
-        count_sum = combined_df.groupby('normalized_text')['forward_count'].sum()
+    if 'forward_channels' in combined_df.columns:
+        # forward_channels의 고유 채널 집합으로 재계산 — 반복 실행 시 누적 방지
         channels_agg = combined_df.groupby('normalized_text')['forward_channels'].apply(
             lambda x: ';'.join(sorted(set(';'.join(x.dropna().astype(str)).split(';'))))
         )
 
     deduped = combined_df.drop_duplicates(subset='normalized_text', keep='first').reset_index(drop=True)
 
-    if 'forward_count' in combined_df.columns:
-        deduped['forward_count'] = deduped['normalized_text'].map(count_sum)
+    if 'forward_channels' in combined_df.columns:
         deduped['forward_channels'] = deduped['normalized_text'].map(channels_agg)
+        deduped['forward_count'] = deduped['forward_channels'].apply(
+            lambda x: len([ch for ch in x.split(';') if ch]) if pd.notna(x) and x else 1
+        )
 
     after_dedup = len(deduped)
     logger.info(f"중복 제거 완료: {before_dedup}개 → {after_dedup}개 (제거: {before_dedup - after_dedup}개)")
